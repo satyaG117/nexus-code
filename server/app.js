@@ -2,7 +2,9 @@ require('dotenv').config()
 const express = require('express');
 const mongoose = require('mongoose')
 
-const userRoutes = require('./routes/user-routes')
+const userRoutes = require('./routes/user-routes');
+const { isLoggedIn } = require('./middlewares/auth');
+const HttpError = require('./models/HttpError');
 
 const app = express();
 
@@ -33,6 +35,16 @@ main()
     .catch(err => console.log(err));
 
 app.use(express.json());
+
+// --------- used for testing isLoggedIn middleware; remove later
+// app.get('/protected-route',isLoggedIn, (req,res,next)=>{
+//     if(!req.userData){
+//         return (next(new HttpError(401, 'Unauthorized request')))
+//     }
+    
+//     res.status(200).json(req.userData);
+
+// })
 
 app.use('/api/users', userRoutes)
 
