@@ -1,0 +1,13 @@
+.text-input{
+    border: none;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-bottom: 2px solid #E4A11B;
+    border-radius: 0;
+}
+
+.text-input:focus{
+    border: none;
+    background-color: rgba(0, 0, 0, 0.140);
+    border-bottom: 2px solid yellow;
+    border-radius: 0;
+}
