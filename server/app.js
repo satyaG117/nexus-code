@@ -36,15 +36,9 @@ main()
 
 app.use(express.json());
 
-// --------- used for testing isLoggedIn middleware; remove later
-// app.get('/protected-route',isLoggedIn, (req,res,next)=>{
-//     if(!req.userData){
-//         return (next(new HttpError(401, 'Unauthorized request')))
-//     }
-    
-//     res.status(200).json(req.userData);
-
-// })
+app.get('/test',(req,res,next)=>{
+    res.status(200).json({message : 'success'});
+})
 
 app.use('/api/users', userRoutes)
 
