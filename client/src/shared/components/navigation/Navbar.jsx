@@ -1,6 +1,9 @@
+import { useContext } from "react"
 import { NavLink } from "react-router-dom"
+import { AuthContext } from "../../contexts/AuthContext"
 
 export default function Navbar() {
+    const auth = useContext(AuthContext)
     return (
         <nav className="navbar navbar-expand-lg bg-dark-subtle">
             <div className="container-fluid">
@@ -13,10 +16,19 @@ export default function Navbar() {
                         <NavLink className='nav-link' end to='/'>Home</NavLink>
                         <NavLink className='nav-link' end to='/search'>Search</NavLink>
                         <NavLink className='nav-link' end to='/create'>Create</NavLink>
-                    
+
                     </div>
+
                     <div className="navbar-nav ms-auto">
-                        <NavLink className='nav-link' end to='/login'>Login</NavLink>
+                        {
+                            auth.isLoggedIn ? 
+                            <button className="nav-link" onClick={auth.logout}>
+                                Logout
+                            </button>
+                                :
+                            <NavLink className='nav-link' end to='/login'>Login</NavLink>
+                        }
+
                     </div>
                 </div>
             </div>
