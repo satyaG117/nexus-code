@@ -12,4 +12,9 @@ const signupSchema = loginSchema.keys({
     username : Joi.string().required().custom(validateUsername , 'username-validation')
 })
 
-module.exports = {loginSchema, signupSchema}
+const projectSchema = Joi.object().keys({
+    title : Joi.string().required(),
+    description : Joi.string()
+})
+
+module.exports = {loginSchema, signupSchema, projectSchema}

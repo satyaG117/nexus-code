@@ -1,18 +1,19 @@
-import './Spinner.css'
+import './Overlay.css'
 
-export default function Spinner({overlay=false}) {
+export default function Spinner({overlayType=null , text='', color='warning'}) { // overlay options : none, translucent, opaque
 
-    if (overlay) {
+    if (overlayType) {
         return (
-            <div className='overlay'>
-                <div className="spinner-border text-warning" role="status">
+            <div className={`overlay overlay-${overlayType}`}>
+                <div className={`spinner-border text-${color}`} role="status">
                     <span className="visually-hidden">Loading...</span>
                 </div>
+                <h5>{text}</h5>
             </div>
         )
     } else {
         return (
-            <div className="spinner-border text-warning" role="status">
+            <div className={`spinner-border text-${color}`} role="status">
                 <span className="visually-hidden">Loading...</span>
             </div>
         )

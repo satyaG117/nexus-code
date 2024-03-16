@@ -27,7 +27,8 @@ const projectSchema = new Schema({
     },
     forkedFrom : {
         type : mongoose.Schema.Types.ObjectId,
-        ref : 'Project'
+        ref : 'Project',
+        default : null
     },
     createdAt: {
         type: Date,

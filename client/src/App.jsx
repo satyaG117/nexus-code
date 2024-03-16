@@ -11,6 +11,10 @@ import Signup from './user/pages/Signup';
 import { AuthContext } from './shared/contexts/AuthContext';
 import { useAuth } from './shared/hooks/useAuth';
 import UnauthenticatedOnlyRoutes from './shared/components/protected-routes/UnauthenticatedOnlyRoutes'
+import AuthenticatedOnlyRoutes from './shared/components/protected-routes/AuthenticatedOnlyRoutes';
+import NewProject from './project/pages/NewProject';
+import ViewProject from './project/pages/ViewProject';
+import EditProject from './project/pages/EditProject';
 
 
 function App() {
@@ -34,6 +38,12 @@ function App() {
           <Navbar />
           <Routes>
             <Route path='/' element={<Home />} />
+            <Route path='/projects/:projectId' element={< ViewProject />}/>
+
+            <Route element={<AuthenticatedOnlyRoutes allowedRoles={['user']} redirectTo={'/login'} />}>
+              <Route path='projects/create' element={<NewProject />} />
+              <Route path='projects/:projectId/edit' element={<EditProject />}/>
+            </Route>
 
             <Route element={<UnauthenticatedOnlyRoutes />}>
               <Route path='/login' element={<Login />} />
