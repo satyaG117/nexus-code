@@ -3,8 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose')
 
 const userRoutes = require('./routes/user-routes');
-const { isLoggedIn } = require('./middlewares/auth');
-const HttpError = require('./models/HttpError');
+const projectRoutes = require('./routes/project-routes')
 
 const app = express();
 
@@ -36,11 +35,19 @@ main()
 
 app.use(express.json());
 
-app.get('/test',(req,res,next)=>{
-    res.status(200).json({message : 'success'});
+// delay middleware for testing
+app.use((req, res, next) => {
+    setTimeout(() => {
+        next();
+    }, 1000);
+})
+
+app.get('/test', (req, res, next) => {
+    res.status(200).json({ message: 'success' });
 })
 
 app.use('/api/users', userRoutes)
+app.use('/api/projects', projectRoutes)
 
 // error handler middleware
 app.use((err, req, res, next) => {

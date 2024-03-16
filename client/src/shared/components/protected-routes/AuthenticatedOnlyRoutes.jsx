@@ -3,7 +3,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { AuthContext } from "../../contexts/AuthContext";
 
 
-export default function AuthOnlyRoutes({allowedRoles, redirectTo}) {
+export default function AuthenticatedOnlyRoutes({allowedRoles, redirectTo}) {
     const location = useLocation();
     const auth = useContext(AuthContext);
     // console.log('Auth only : ',auth);
