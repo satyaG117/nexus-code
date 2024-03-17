@@ -4,16 +4,16 @@ import TextInput from "../../shared/components/form-elements/TextInput"
 import Spinner from "../../shared/components/loading-icons/Spinner"
 import { useEffect } from "react";
 
-export default function ProjectForm({ onSubmit, projectData, isSubmitting }) {
+export default function ProjectForm({ onSubmit, project, isSubmitting }) {
     
     const { register, handleSubmit, formState: { errors }, setValue} = useForm();
 
     useEffect(()=>{
-        if(!projectData) return;
+        if(!project) return;
 
-        setValue('title', projectData.title);
-        setValue('description', projectData.description);
-    },[projectData])
+        setValue('title', project.title);
+        setValue('description', project.description);
+    },[project])
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>

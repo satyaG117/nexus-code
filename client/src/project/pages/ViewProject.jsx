@@ -7,6 +7,7 @@ import './ViewProject.css'
 import useFetch from "../../shared/hooks/useFetch";
 import Spinner from "../../shared/components/loading-icons/Spinner";
 import { AuthContext } from "../../shared/contexts/AuthContext";
+import ErrorMessage from "../../shared/components/ui-elements/ErrorMessage";
 
 export default function ViewProject() {
     const { projectId } = useParams();
@@ -37,9 +38,7 @@ export default function ViewProject() {
         <>
             {isLoading && (<Spinner overlayType="opaque" text="Please wait..." />)}
             {error &&
-                <div className="mt-5 text-center">
-                    <h4 className="text-secondary">{error}</h4>
-                </div>
+                <ErrorMessage message={error}/>
             }
             {projectData && (
                 <div className="shadow mt-4 col-md-6 offset-md-3 col-10 offset-1">

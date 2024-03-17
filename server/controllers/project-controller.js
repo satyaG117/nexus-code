@@ -35,3 +35,22 @@ module.exports.getProjects = async(req,res,next)=>{
         next(new HttpError(500, 'Failed to fetch projects'));
     }
 }
+
+module.exports.updateProjectDetails = async(req,res,next)=>{
+    try{
+        const {projectId} = req.params;
+        let project = await Project.findById(projectId);
+        if(!project){
+            return next(new HttpError(404, 'Project not found'));
+        }
+
+        if(project.author.toString() !== req.userData.userId){
+            return next(new HttpError(401, 'Unauthorized to perform the action'))
+        }
+
+        project = await Project.findByIdAndUpdate(projectId, req.body, {new : true});
+        res.status(200).json(project);
+    }catch(err){
+        next(new HttpError(500, 'Error encountered while editing'))
+    }
+}
