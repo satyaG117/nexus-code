@@ -10,8 +10,6 @@ import { AuthContext } from '../../shared/contexts/AuthContext';
 import ProjectForm from '../components/ProjectForm';
 
 export default function NewProject() {
-
-  const { register, handleSubmit, formState: { errors } } = useForm();
   const makeRequest = useFetch();
   const auth = useContext(AuthContext);
   const navigate = useNavigate();
@@ -37,32 +35,6 @@ export default function NewProject() {
     <div className="col-md-6 offset-md-3 col-10 offset-1 border border-warning mt-5 p-4">
       <h3>Start a new project</h3>
       <hr />
-      {/* <form onSubmit={handleSubmit(saveProject)}>
-        <div className='mb-3'>
-          <label htmlFor="title" className='form-label'>Enter a title for project</label>
-          <TextInput
-            name={"title"}
-            placeholder={"Title"}
-            type={"text"}
-            register={register}
-            rules={{
-              required: 'Title is required',
-            }}
-            error={errors.title}
-          />
-        </div>
-        <div className='mb-3'>
-          <label htmlFor="description" className='form-label'>Enter a description for project</label>
-          <TextArea
-            name={"description"}
-            placeholder={"Description"}
-            register={register}
-            error={errors.description}
-            rows={5}
-          />
-        </div>
-        <button className='btn btn-warning' disabled={isLoading} >{isLoading ? <Spinner /> : 'Submit'}</button>
-      </form> */}
       <ProjectForm onSubmit={saveProject} isSubmitting={isLoading} projectData={null}/>
     </div>
   )
