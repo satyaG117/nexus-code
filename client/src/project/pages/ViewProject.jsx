@@ -1,21 +1,26 @@
 import { useContext, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom"
+import { Link, useNavigate, useParams } from "react-router-dom"
 import './ViewProject.css'
-// import { toast } from 'react-toastify';
-// import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import useFetch from "../../shared/hooks/useFetch";
 import Spinner from "../../shared/components/loading-icons/Spinner";
 import { AuthContext } from "../../shared/contexts/AuthContext";
 import ErrorMessage from "../../shared/components/ui-elements/ErrorMessage";
+import Modal from "../../shared/components/ui-elements/Modal";
 
 export default function ViewProject() {
     const { projectId } = useParams();
+    const navigate = useNavigate();
     const makeRequest = useFetch();
     const [isLoading, setIsLoading] = useState(false);
     const [projectData, setProjectData] = useState(null);
     const [error, setError] = useState(null)
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const auth = useContext(AuthContext);
+
 
     useEffect(() => {
         const fetchProject = async () => {
@@ -34,11 +39,48 @@ export default function ViewProject() {
         fetchProject();
     }, [projectId]);
 
+    const deleteProject = async () => {
+        try {
+            closeDeleteModal();
+            setIsDeleting(true)
+            await makeRequest(`http://localhost:5000/api/projects/${projectId}`, 'DELETE', null, {
+                'Authorization' : auth.token
+            })
+            navigate('/')
+        } catch (err) {
+            toast.error(err.message);
+        } finally {
+            setIsDeleting(false);
+        }
+    }
+
+    const closeDeleteModal = () => {
+        setIsDeleteModalOpen(false);
+    }
+
+    const openDeleteModal = () => {
+        setIsDeleteModalOpen(true);
+    }
+
     return (
         <>
+            { isDeleting && <Spinner overlayType={'translucent'}/>}
+            <Modal
+                visible={isDeleteModalOpen}
+                title='Confirm Action !!'
+                onClose={closeDeleteModal}
+            >
+                <div className="my-2">
+                    <p>Do you really want to delete this project ? The action is irreversible</p>
+                    <div className="mt-1">
+                        <button className="me-2 btn btn-light" onClick={closeDeleteModal}>No</button>
+                        <button className="btn btn-outline-danger" onClick={deleteProject}>Yes</button>
+                    </div>
+                </div>
+            </Modal>
             {isLoading && (<Spinner overlayType="opaque" text="Please wait..." />)}
             {error &&
-                <ErrorMessage message={error}/>
+                <ErrorMessage message={error} />
             }
             {projectData && (
                 <div className="shadow mt-4 col-md-6 offset-md-3 col-10 offset-1">
@@ -57,7 +99,7 @@ export default function ViewProject() {
                                     </button>
                                     <ul className="dropdown-menu">
                                         <li><Link to={`/projects/${projectId}/edit`} className="dropdown-item">Edit</Link></li>
-                                        <li><button className="dropdown-item">Delete</button></li>
+                                        <li><button className="dropdown-item" onClick={openDeleteModal}>Delete</button></li>
 
                                     </ul>
                                 </div>
