@@ -1,0 +1,23 @@
+.editor-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.editor-name {
+    flex: none;
+    height: auto;
+}
+
+.editor-container {
+    flex: 1;
+    /* resize: vertical; */
+    overflow:hidden
+}
+
+.output-window{
+    overflow: hidden;
+}
+
+.project-window{
+    overflow: hidden;
+}

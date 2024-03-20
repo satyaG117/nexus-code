@@ -15,6 +15,7 @@ import AuthenticatedOnlyRoutes from './shared/components/protected-routes/Authen
 import NewProject from './project/pages/NewProject';
 import ViewProject from './project/pages/ViewProject';
 import EditProject from './project/pages/EditProject';
+import ProjectEditor from './project/pages/ProjectEditor';
 
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
             <Route element={<AuthenticatedOnlyRoutes allowedRoles={['user']} redirectTo={'/login'} />}>
               <Route path='projects/create' element={<NewProject />} />
               <Route path='projects/:projectId/edit' element={<EditProject />}/>
+              <Route path='projects/:projectId/editor' element={<ProjectEditor />}/>
             </Route>
 
             <Route element={<UnauthenticatedOnlyRoutes />}>
