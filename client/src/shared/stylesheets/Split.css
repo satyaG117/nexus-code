@@ -9,9 +9,13 @@
 }
 
 .gutter {
-    background-color: #eee;
+    background-color: #272729;
     background-repeat: no-repeat;
     background-position: 50%;
+}
+
+.gutter:hover{
+    background-color: #0d6efd
 }
 
 .gutter.gutter-horizontal {
