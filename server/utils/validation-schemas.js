@@ -14,7 +14,13 @@ const signupSchema = loginSchema.keys({
 
 const projectSchema = Joi.object().keys({
     title : Joi.string().required(),
-    description : Joi.string()
+    description : Joi.string().allow('').optional()
 })
 
-module.exports = {loginSchema, signupSchema, projectSchema}
+const codeSchema = Joi.object({
+    html : Joi.string(),
+    css : Joi.string(),
+    js : Joi.string(),
+})
+
+module.exports = {loginSchema, signupSchema, projectSchema, codeSchema}
