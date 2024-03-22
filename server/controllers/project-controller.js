@@ -56,7 +56,6 @@ module.exports.updateProjectDetails = async (req, res, next) => {
 }
 
 module.exports.deleteProject = async (req, res, next) => {
-    console.log('Delete project')
     try {
         const { projectId } = req.params;
         let project = await Project.findById(projectId);
@@ -99,6 +98,31 @@ module.exports.saveProject = async (req, res, next) => {
 
         res.status(200).json({message : 'Saved successfully'});
     } catch (err) {
-        next(500, 'Error encountered while trying to save');
+        next(new HttpError(500, 'Unknown error encountered while trying to save'));
+    }
+}
+
+module.exports.forkProject = async(req,res,next)=>{
+    try{
+        const {projectId} = req.params;
+        let targetProject = await Project.findById(projectId);
+
+        if(!targetProject){
+            return next(new HttpError(404, 'Project not found'));
+        }
+
+        const {title, description, code} = targetProject;
+        const newProject = new Project({title, description, code, author : req.userData.userId, forkedFrom : targetProject._id});
+
+        await newProject.save();
+
+        res.status(201).json({
+            message : 'Fork successful',
+            forkId : newProject._id 
+        })
+
+    }catch(err){
+        console.log(err);
+        next(new HttpError(500, 'Unknown error encountered while to trying to fork'))
     }
 }

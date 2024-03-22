@@ -39,7 +39,7 @@ app.use(express.json());
 app.use((req, res, next) => {
     setTimeout(() => {
         next();
-    }, 1000);
+    }, 400);
 })
 
 app.get('/test', (req, res, next) => {
@@ -51,6 +51,7 @@ app.use('/api/projects', projectRoutes)
 
 // error handler middleware
 app.use((err, req, res, next) => {
+    console.log(err);
     if (req.headersSent) {
         return next(err);
     }

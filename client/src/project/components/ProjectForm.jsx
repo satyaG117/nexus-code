@@ -13,7 +13,7 @@ export default function ProjectForm({ onSubmit, project, isSubmitting }) {
 
         setValue('title', project.title);
         setValue('description', project.description);
-    },[project])
+    },[project, setValue])
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
