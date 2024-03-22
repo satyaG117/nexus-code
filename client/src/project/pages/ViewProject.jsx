@@ -9,6 +9,7 @@ import Spinner from "../../shared/components/loading-icons/Spinner";
 import { AuthContext } from "../../shared/contexts/AuthContext";
 import ErrorMessage from "../../shared/components/ui-elements/ErrorMessage";
 import Modal from "../../shared/components/ui-elements/Modal";
+import useFork from "../../shared/hooks/useFork";
 
 export default function ViewProject() {
     const { projectId } = useParams();
@@ -20,6 +21,7 @@ export default function ViewProject() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const auth = useContext(AuthContext);
+    const { forkProject, isForking } = useFork()
 
 
     useEffect(() => {
@@ -37,14 +39,14 @@ export default function ViewProject() {
             }
         }
         fetchProject();
-    }, [projectId]);
+    }, [projectId, makeRequest]);
 
     const deleteProject = async () => {
         try {
             closeDeleteModal();
             setIsDeleting(true)
             await makeRequest(`http://localhost:5000/api/projects/${projectId}`, 'DELETE', null, {
-                'Authorization' : auth.token
+                'Authorization': auth.token
             })
             navigate('/')
         } catch (err) {
@@ -62,9 +64,18 @@ export default function ViewProject() {
         setIsDeleteModalOpen(true);
     }
 
+    const handleFork = async () => {
+        try {
+            await forkProject(projectId);
+        } catch (err) {
+            toast.error(err.message);
+        }
+    }
+
     return (
         <>
-            { isDeleting && <Spinner overlayType={'translucent'}/>}
+            {isDeleting && <Spinner overlayType={'translucent'} />}
+            {isForking && <Spinner overlayType={'translucent'} text="Please wait"/>}
             <Modal
                 visible={isDeleteModalOpen}
                 title='Confirm Action !!'
@@ -83,11 +94,12 @@ export default function ViewProject() {
                 <ErrorMessage message={error} />
             }
             {projectData && (
-                <div className="shadow mt-4 col-md-6 offset-md-3 col-10 offset-1">
+                <div className="shadow mt-4 col-md-6 offset-md-3 col-10 offset-1 bg-primary-subtle">
                     <div className="bg-primary-subtle px-4 py-3 d-flex">
                         <div className="me-auto">
                             <h4>{projectData.title}</h4>
-                            <Link to={`/profile/${projectData.author._id}`}>{projectData.author.username}</Link>
+                            <Link to={`/profile/${projectData.author._id}`} className="btn btn-sm btn-outline-light">{projectData.author.username}</Link>
+                            {projectData.forkedFrom && (<div><small>Forked from </small> <Link to={`/projects/${projectData.forkedFrom}`}>See original</Link></div>)}
                         </div>
                         {projectData.author._id === auth.userId && (
                             <div className="ms-auto">
@@ -116,8 +128,15 @@ export default function ViewProject() {
                         // height="100%"
                         />
                     </div>
-                    <div className="d-flex m-2">
-                        <Link to={`/projects/${projectId}/editor`} className="btn btn-light">Open in Editor</Link>
+                    <div className="d-flex p-2 py-3 border">
+                        <Link to={`/projects/${projectId}/editor`} className="btn btn-light me-2">Open in Editor</Link>
+                        <button className="btn btn-secondary me-2" onClick={handleFork}>Fork</button>
+                        <button className="btn btn-light">Like</button>
+                    </div>
+                    <div className="p-2">
+                        <p className="mb-3">{projectData.description}</p>
+                        <p>Created at : {projectData.createdAt.toLocaleString()}</p>
+                        <p>Last edited at : {projectData.lastEditedAt.toLocaleString()}</p>
                     </div>
                 </div>
             )
