@@ -26,7 +26,7 @@ module.exports.getProject = async (req, res, next) => {
 
 module.exports.getProjects = async (req, res, next) => {
     try {
-        const projects = await Project.find().populate('author', '-password -email -__v');
+        const projects = await Project.find().populate('author', '-password -email -__v').sort('-createdAt');
         if (projects.length === 0) {
             return next(new HttpError(404, 'Projects not found'));
         }
