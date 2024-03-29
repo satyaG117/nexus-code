@@ -10,6 +10,7 @@ import { AuthContext } from "../../shared/contexts/AuthContext";
 import ErrorMessage from "../../shared/components/ui-elements/ErrorMessage";
 import Modal from "../../shared/components/ui-elements/Modal";
 import useFork from "../../shared/hooks/useFork";
+import LikeButton from "../../shared/components/ui-elements/LikeButton";
 
 export default function ViewProject() {
     const { projectId } = useParams();
@@ -29,7 +30,9 @@ export default function ViewProject() {
             try {
                 setError(null)
                 setIsLoading(true);
-                const responseData = await makeRequest(`http://localhost:5000/api/projects/${projectId}`);
+                const responseData = await makeRequest(`http://localhost:5000/api/projects/${projectId}`, 'GET', null, {
+                    'Authorization': auth.token
+                });
                 setProjectData(responseData)
                 console.log(responseData)
             } catch (err) {
@@ -72,10 +75,33 @@ export default function ViewProject() {
         }
     }
 
+    const toggleLikeState = () => {
+        setProjectData((prevState) => {
+            if (prevState.isLiked) {
+                return { ...prevState, isLiked: false, likesCount: prevState.likesCount - 1 }
+            } else {
+                return { ...prevState, isLiked: true, likesCount: prevState.likesCount + 1 }
+            }
+        })
+    }
+
+    const toggleLike = async () => {
+        try {
+            // optimistic update
+            toggleLikeState();
+            await makeRequest(`http://localhost:5000/api/projects/${projectId}/like`, 'POST', null, {
+                'Authorization': auth.token
+            });
+        } catch (err) {
+            toast.error(err.message)
+            toggleLikeState();
+        }
+    }
+
     return (
         <>
             {isDeleting && <Spinner overlayType={'translucent'} />}
-            {isForking && <Spinner overlayType={'translucent'} text="Please wait"/>}
+            {isForking && <Spinner overlayType={'translucent'} text="Please wait" />}
             <Modal
                 visible={isDeleteModalOpen}
                 title='Confirm Action !!'
@@ -130,8 +156,8 @@ export default function ViewProject() {
                     </div>
                     <div className="d-flex p-2 py-3 border">
                         <Link to={`/projects/${projectId}/editor`} className="btn btn-light me-2">Open in Editor</Link>
+                        <span className="me-2"><LikeButton isLiked={projectData.isLiked} onClick={toggleLike} projectId={projectData._id} likesCount={projectData.likesCount} /></span>
                         <button className="btn btn-secondary me-2" onClick={handleFork}>Fork</button>
-                        <button className="btn btn-light">Like</button>
                     </div>
                     <div className="p-2">
                         <p className="mb-3">{projectData.description}</p>
