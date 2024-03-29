@@ -5,3 +5,7 @@
 .project-card:hover{
     transform: scale(1.02);
 }
+
+a.card-link{
+    text-decoration: none;    
+}
