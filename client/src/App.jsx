@@ -16,6 +16,7 @@ import NewProject from './project/pages/NewProject';
 import ViewProject from './project/pages/ViewProject';
 import EditProject from './project/pages/EditProject';
 import ProjectEditor from './project/pages/ProjectEditor';
+import Profile from './user/pages/Profile';
 
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
           <Routes>
             <Route path='/' element={<Home />} />
             <Route path='/projects/:projectId' element={< ViewProject />}/>
+            <Route path='/profile/:userId' element={< Profile />}/>
 
             <Route element={<AuthenticatedOnlyRoutes allowedRoles={['user']} redirectTo={'/login'} />}>
               <Route path='projects/create' element={<NewProject />} />

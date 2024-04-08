@@ -1,7 +1,7 @@
 const HttpError = require('../models/HttpError');
 const Project = require('../models/Project');
 const Like = require('../models/Like');
-const { default: mongoose } = require('mongoose');
+const { mongoose } = require('mongoose');
 
 module.exports.createNewProject = async (req, res, next) => {
     try {
@@ -17,123 +17,93 @@ module.exports.getProject = async (req, res, next) => {
     try {
         const { projectId } = req.params;
         let project
-        // const project = await Project.findById(projectId).populate('author', '-password -email -__v');
+        let aggregationPipeline = [
+            {
+                '$match': {
+                    '_id': new mongoose.Types.ObjectId(projectId)
+                }
+            }, {
+                '$lookup': {
+                    'from': 'users',
+                    'localField': 'author',
+                    'foreignField': '_id',
+                    'as': 'author'
+                }
+            }, {
+                '$unwind': {
+                    'path': '$author',
+                    'preserveNullAndEmptyArrays': false
+                }
+            }, {
+                '$lookup': {
+                    'from': 'likes',
+                    'localField': '_id',
+                    'foreignField': 'project',
+                    'as': 'likes'
+                }
+            }
+        ]
+
         if (req.userData) {
-            project = await Project.aggregate([
-                {
-                    '$match': {
-                        '_id': new mongoose.Types.ObjectId(projectId)
-                    }
-                }, {
-                    '$lookup': {
-                        'from': 'users',
-                        'localField': 'author',
-                        'foreignField': '_id',
-                        'as': 'author'
-                    }
-                }, {
-                    '$unwind': {
-                        'path': '$author',
-                        'preserveNullAndEmptyArrays': false
-                    }
-                }, {
-                    '$lookup': {
-                        'from': 'likes',
-                        'localField': '_id',
-                        'foreignField': 'project',
-                        'as': 'likes'
-                    }
-                }, {
-                    '$addFields': {
-                        'isLiked': {
-                            '$cond': {
-                                'if': {
-                                    '$gt': [
-                                        {
-                                            '$size': {
-                                                '$ifNull': [
-                                                    {
-                                                        '$filter': {
-                                                            'input': '$likes',
-                                                            'cond': {
-                                                                '$eq': [
-                                                                    '$$this.user', new mongoose.Types.ObjectId(req.userData.userId)
-                                                                ]
-                                                            }
+            aggregationPipeline.push({
+                '$addFields': {
+                    'isLiked': {
+                        '$cond': {
+                            'if': {
+                                '$gt': [
+                                    {
+                                        '$size': {
+                                            '$ifNull': [
+                                                {
+                                                    '$filter': {
+                                                        'input': '$likes',
+                                                        'cond': {
+                                                            '$eq': [
+                                                                '$$this.user', new mongoose.Types.ObjectId(req.userData.userId)
+                                                            ]
                                                         }
-                                                    }, []
-                                                ]
-                                            }
-                                        }, 0
-                                    ]
-                                },
-                                'then': true,
-                                'else': false
-                            }
+                                                    }
+                                                }, []
+                                            ]
+                                        }
+                                    }, 0
+                                ]
+                            },
+                            'then': true,
+                            'else': false
                         }
-                    }
-                }, {
-                    '$addFields': {
-                        'likesCount': {
-                            '$size': '$likes'
-                        }
-                    }
-                }, {
-                    '$project': {
-                        'stars': 0,
-                        'author.password': 0,
-                        'author.createdAt': 0,
-                        'author.__v': 0
                     }
                 }
-            ]
-            );
+            })
+
         } else {
-            project = await Project.aggregate([
-                {
-                    '$match': {
-                        '_id': new mongoose.Types.ObjectId(projectId)
-                    }
-                }, {
-                    '$lookup': {
-                        'from': 'users',
-                        'localField': 'author',
-                        'foreignField': '_id',
-                        'as': 'author'
-                    }
-                }, {
-                    '$unwind': {
-                        'path': '$author',
-                        'preserveNullAndEmptyArrays': false
-                    }
-                }, {
-                    '$lookup': {
-                        'from': 'likes',
-                        'localField': '_id',
-                        'foreignField': 'project',
-                        'as': 'likes'
-                    }
-                }, {
-                    '$addFields': {
-                        'isLiked': false
-                    }
-                }, {
-                    '$addFields': {
-                        'likesCount': {
-                            '$size': '$likes'
-                        }
-                    }
-                }, {
-                    '$project': {
-                        'stars': 0,
-                        'author.password': 0,
-                        'author.createdAt': 0,
-                        'author.__v': 0
-                    }
+            aggregationPipeline.push({
+                '$addFields': {
+                    'isLiked': false
                 }
-            ]
-            );
+            })
         }
+
+        aggregationPipeline.push({
+            '$addFields': {
+                'likesCount': {
+                    '$size': '$likes'
+                }
+            }
+        })
+
+        aggregationPipeline.push({
+            '$project': {
+                'likes': 0,
+                'author.password': 0,
+                'author.createdAt': 0,
+                'author.__v': 0
+            }
+        })
+
+        project = await Project.aggregate(aggregationPipeline)
+
+
         if (project.length === 0) {
             return next(new HttpError(404, 'Project not found'));
         }
@@ -147,124 +117,92 @@ module.exports.getProject = async (req, res, next) => {
 module.exports.getProjects = async (req, res, next) => {
     try {
         let projects;
+        let aggregationPipeline = [
+            {
+                '$sort': {
+                    'createdAt': -1
+                }
+            },
+            {
+                '$lookup': {
+                    'from': 'users',
+                    'localField': 'author',
+                    'foreignField': '_id',
+                    'as': 'author'
+                }
+            }, {
+                '$unwind': {
+                    'path': '$author',
+                    'preserveNullAndEmptyArrays': false
+                }
+            }, {
+                '$lookup': {
+                    'from': 'likes',
+                    'localField': '_id',
+                    'foreignField': 'project',
+                    'as': 'likes'
+                }
+            }
+        ]
         if (req.userData) {
-            projects = await Project.aggregate([
-                {
-                    '$sort': {
-                        'createdAt': -1
-                    }
-                },
-                {
-                    '$lookup': {
-                        'from': 'users',
-                        'localField': 'author',
-                        'foreignField': '_id',
-                        'as': 'author'
-                    }
-                }, {
-                    '$unwind': {
-                        'path': '$author',
-                        'preserveNullAndEmptyArrays': false
-                    }
-                }, {
-                    '$lookup': {
-                        'from': 'likes',
-                        'localField': '_id',
-                        'foreignField': 'project',
-                        'as': 'likes'
-                    }
-                }, {
-                    '$addFields': {
-                        'isLiked': {
-                            '$cond': {
-                                'if': {
-                                    '$gt': [
-                                        {
-                                            '$size': {
-                                                '$ifNull': [
-                                                    {
-                                                        '$filter': {
-                                                            'input': '$likes',
-                                                            'cond': {
-                                                                '$eq': [
-                                                                    '$$this.user', new mongoose.Types.ObjectId(req.userData.userId)
-                                                                ]
-                                                            }
+            aggregationPipeline.push({
+                '$addFields': {
+                    'isLiked': {
+                        '$cond': {
+                            'if': {
+                                '$gt': [
+                                    {
+                                        '$size': {
+                                            '$ifNull': [
+                                                {
+                                                    '$filter': {
+                                                        'input': '$likes',
+                                                        'cond': {
+                                                            '$eq': [
+                                                                '$$this.user', new mongoose.Types.ObjectId(req.userData.userId)
+                                                            ]
                                                         }
-                                                    }, []
-                                                ]
-                                            }
-                                        }, 0
-                                    ]
-                                },
-                                'then': true,
-                                'else': false
-                            }
+                                                    }
+                                                }, []
+                                            ]
+                                        }
+                                    }, 0
+                                ]
+                            },
+                            'then': true,
+                            'else': false
                         }
-                    }
-                }, {
-                    '$addFields': {
-                        'likesCount': {
-                            '$size': '$likes'
-                        }
-                    }
-                }, {
-                    '$project': {
-                        'stars': 0,
-                        'author.password': 0,
-                        'author.createdAt': 0,
-                        'author.__v': 0
                     }
                 }
-            ]
-            );
+            })
+
         } else {
-            projects = await Project.aggregate([
-                {
-                    '$sort': {
-                        'createdAt': -1
-                    }
-                },
-                {
-                    '$lookup': {
-                        'from': 'users',
-                        'localField': 'author',
-                        'foreignField': '_id',
-                        'as': 'author'
-                    }
-                }, {
-                    '$unwind': {
-                        'path': '$author',
-                        'preserveNullAndEmptyArrays': false
-                    }
-                }, {
-                    '$lookup': {
-                        'from': 'likes',
-                        'localField': '_id',
-                        'foreignField': 'project',
-                        'as': 'likes'
-                    }
-                }, {
-                    '$addFields': {
-                        'isLiked': false
-                    }
-                }, {
-                    '$addFields': {
-                        'likesCount': {
-                            '$size': '$likes'
-                        }
-                    }
-                }, {
-                    '$project': {
-                        'stars': 0,
-                        'author.password': 0,
-                        'author.createdAt': 0,
-                        'author.__v': 0
-                    }
+            aggregationPipeline.push({
+                '$addFields': {
+                    'isLiked': false
                 }
-            ]
-            );
+            })
         }
+
+        aggregationPipeline.push({
+            '$addFields': {
+                'likesCount': {
+                    '$size': '$likes'
+                }
+            }
+        })
+
+        aggregationPipeline.push({
+            '$project': {
+                'likes': 0,
+                'author.password': 0,
+                'author.createdAt': 0,
+                'author.__v': 0
+            }
+        })
+
+        projects = await Project.aggregate(aggregationPipeline)
+
         if (projects.length === 0) {
             return next(new HttpError(404, 'Projects not found'));
         }
@@ -439,28 +377,361 @@ module.exports.toggleLike = async (req, res, next) => {
         ]
         );
 
-        if(!project.length === 0){
+        if (!project.length === 0) {
             return next(new HttpError(404, 'Project Not Found'));
         }
 
         console.log(project[0].isLiked)
         // if like then un-like
-        if(project[0].isLiked){
+        if (project[0].isLiked) {
             console.log('Un-like')
-            await Like.deleteOne({user : req.userData.userId, project : projectId});
+            await Like.deleteOne({ user: req.userData.userId, project: projectId });
             res.status(200).json({
-                action : 'delete'
+                action: 'delete'
             });
-        }else{ // add a like
+        } else { // add a like
             console.log('Like')
-            const like = new Like({user : req.userData.userId , project : projectId});
+            const like = new Like({ user: req.userData.userId, project: projectId });
             await like.save();
             res.status(201).json({
-                action : 'create'
+                action: 'create'
             });
         }
 
     } catch (err) {
-        return next(new HttpError(500 , 'Unknown error encountered'));
+        return next(new HttpError(500, 'Unknown error encountered'));
     }
 }
+
+module.exports.getUserProjects = async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+        let aggregationPipeline = [
+            {
+                '$match': {
+                    'author': new mongoose.Types.ObjectId(userId)
+                }
+            }, {
+                '$sort': {
+                    'createdAt': -1
+                }
+            }, {
+                '$lookup': {
+                    'from': 'users',
+                    'localField': 'author',
+                    'foreignField': '_id',
+                    'as': 'author'
+                }
+            }, {
+                '$unwind': {
+                    'path': '$author',
+                    'preserveNullAndEmptyArrays': false
+                }
+            }, {
+                '$lookup': {
+                    'from': 'likes',
+                    'localField': '_id',
+                    'foreignField': 'project',
+                    'as': 'likes'
+                }
+            }
+        ]
+
+        if (req.userData) {
+            aggregationPipeline.push({
+                '$addFields': {
+                    'isLiked': {
+                        '$cond': {
+                            'if': {
+                                '$gt': [
+                                    {
+                                        '$size': {
+                                            '$ifNull': [
+                                                {
+                                                    '$filter': {
+                                                        'input': '$likes',
+                                                        'cond': {
+                                                            '$eq': [
+                                                                '$$this.user', new mongoose.Types.ObjectId(req.userData.userId)
+                                                            ]
+                                                        }
+                                                    }
+                                                }, []
+                                            ]
+                                        }
+                                    }, 0
+                                ]
+                            },
+                            'then': true,
+                            'else': false
+                        }
+                    }
+                }
+            })
+        } else {
+            aggregationPipeline.push({
+                '$addFields': {
+                    'isLiked': false
+                }
+            })
+        }
+
+        aggregationPipeline.push({
+            '$addFields': {
+                'likesCount': {
+                    '$size': '$likes'
+                }
+            }
+        })
+
+        aggregationPipeline.push({
+            '$project': {
+                'likes': 0,
+                'author.password': 0,
+                'author.createdAt': 0,
+                'author.__v': 0
+            }
+        })
+
+        let projects = await Project.aggregate(aggregationPipeline);
+        console.log(projects)
+        if (projects.length === 0) {
+            return next(new HttpError(404, 'Projects not found'));
+        }
+
+        res.status(200).json(projects);
+
+    } catch (err) {
+        next(new HttpError(500, 'Unknown error encountered'))
+    }
+}
+
+module.exports.getUserLikedProjects = async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+        let aggregationPipeline = [
+            {
+                '$match': {
+                    'user': new mongoose.Types.ObjectId(userId)
+                }
+            }, {
+                '$sort': {
+                    'createdAt': -1
+                }
+            }, {
+                '$lookup': {
+                    'from': 'projects',
+                    'localField': 'project',
+                    'foreignField': '_id',
+                    'as': 'project'
+                }
+            }, {
+                '$unwind': {
+                    'path': '$project',
+                    'preserveNullAndEmptyArrays': false
+                }
+            }, {
+                '$replaceRoot': {
+                    'newRoot': '$project'
+                }
+            }, {
+                '$lookup': {
+                    'from': 'users',
+                    'localField': 'author',
+                    'foreignField': '_id',
+                    'as': 'author'
+                }
+            }, {
+                '$unwind': {
+                    'path': '$author',
+                    'preserveNullAndEmptyArrays': false
+                }
+            }, {
+                '$lookup': {
+                    'from': 'likes',
+                    'localField': '_id',
+                    'foreignField': 'project',
+                    'as': 'likes'
+                }
+            }
+        ]
+
+
+
+        if (req.userData) {
+            aggregationPipeline.push({
+                '$addFields': {
+                    'isLiked': {
+                        '$cond': {
+                            'if': {
+                                '$gt': [
+                                    {
+                                        '$size': {
+                                            '$ifNull': [
+                                                {
+                                                    '$filter': {
+                                                        'input': '$likes',
+                                                        'cond': {
+                                                            '$eq': [
+                                                                '$$this.user', new mongoose.Types.ObjectId(req.userData.userId)
+                                                            ]
+                                                        }
+                                                    }
+                                                }, []
+                                            ]
+                                        }
+                                    }, 0
+                                ]
+                            },
+                            'then': true,
+                            'else': false
+                        }
+                    }
+                }
+            })
+        } else {
+            aggregationPipeline.push({
+                '$addFields': {
+                    'isLiked': false
+                }
+            })
+
+        }
+
+
+        aggregationPipeline.push({
+            '$addFields': {
+                'likesCount': {
+                    '$size': '$likes'
+                }
+            }
+        });
+
+        aggregationPipeline.push({
+            '$project': {
+                'likes': 0,
+                'author.password': 0,
+                'author.createdAt': 0,
+                'author.__v': 0
+            }
+        });
+
+
+        console.log('======================================');
+        console.log(aggregationPipeline);
+        console.log('======================================');
+
+
+
+        let projects = await Like.aggregate(aggregationPipeline);
+        console.log(projects);
+
+        if (projects.length === 0) {
+            return next(new HttpError(404, 'Projects not found'));
+        }
+
+        res.status(200).json(projects);
+
+    } catch (err) {
+        next(new HttpError(500, 'Unknown error encountered'))
+    }
+}
+
+// module.exports.getLikedProjects = async (req, res, next) => {
+//     try {
+//         let projects = await Project.aggregate([
+//             {
+//                 '$match': {
+//                     'user': new mongoose.Types.ObjectId('65be6e56d66520033ac700bf')
+//                 }
+//             }, 
+//             // {
+//             //     '$sort': {
+//             //         'createdAt': -1
+//             //     }
+//             // }, {
+//             //     '$lookup': {
+//             //         'from': 'projects',
+//             //         'localField': 'project',
+//             //         'foreignField': '_id',
+//             //         'as': 'project'
+//             //     }
+//             // }, {
+//             //     '$unwind': {
+//             //         'path': '$project',
+//             //         'preserveNullAndEmptyArrays': false
+//             //     }
+//             // }, {
+//             //     '$replaceRoot': {
+//             //         'newRoot': '$project'
+//             //     }
+//             // }, {
+//             //     '$lookup': {
+//             //         'from': 'users',
+//             //         'localField': 'author',
+//             //         'foreignField': '_id',
+//             //         'as': 'author'
+//             //     }
+//             // }, {
+//             //     '$unwind': {
+//             //         'path': '$author',
+//             //         'preserveNullAndEmptyArrays': false
+//             //     }
+//             // }, {
+//             //     '$lookup': {
+//             //         'from': 'likes',
+//             //         'localField': '_id',
+//             //         'foreignField': 'project',
+//             //         'as': 'likes'
+//             //     }
+//             // }, {
+//             //     '$addFields': {
+//             //         'isLiked': {
+//             //             '$cond': {
+//             //                 'if': {
+//             //                     '$gt': [
+//             //                         {
+//             //                             '$size': {
+//             //                                 '$ifNull': [
+//             //                                     {
+//             //                                         '$filter': {
+//             //                                             'input': '$likes',
+//             //                                             'cond': {
+//             //                                                 '$eq': [
+//             //                                                     '$$this.user', new mongoose.Types.ObjectId('65cfa421c3110d7826925e39')
+//             //                                                 ]
+//             //                                             }
+//             //                                         }
+//             //                                     }, []
+//             //                                 ]
+//             //                             }
+//             //                         }, 0
+//             //                     ]
+//             //                 },
+//             //                 'then': true,
+//             //                 'else': false
+//             //             }
+//             //         }
+//             //     }
+//             // }, {
+//             //     '$addFields': {
+//             //         'likesCount': {
+//             //             '$size': '$likes'
+//             //         }
+//             //     }
+//             // }, {
+//             //     '$project': {
+//             //         'likes': 0,
+//             //         'author.password': 0,
+//             //         'author.createdAt': 0,
+//             //         'author.__v': 0
+//             //     }
+//             // }
+//         ])
+
+//         res.status(200).json(projects);
+//     } catch (err) {
+//         console.log(err);
+//         next(new HttpError(500, 'Unknown error'));
+//     }
+// }

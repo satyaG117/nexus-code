@@ -1,0 +1,11 @@
+.profile-pic{
+    max-width: inherit;
+    aspect-ratio: 1;
+    border-radius: 100%;
+}
+
+.tab-name{
+    font-size: 1.5rem;
+    cursor: pointer;
+    user-select: none;
+}
