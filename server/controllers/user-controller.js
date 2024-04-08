@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const mongoose = require('mongoose')
 
 
 const User = require('../models/User');
@@ -78,4 +79,46 @@ module.exports.signupUser = async (req, res, next) => {
         email,
         token
     })
+}
+
+module.exports.getUser = async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+        const user = await User.aggregate([
+            {
+                '$match': {
+                    '_id': new mongoose.Types.ObjectId(userId)
+                }
+            }, {
+                '$lookup': {
+                    'from': 'projects',
+                    'localField': '_id',
+                    'foreignField': 'author',
+                    'as': 'projects'
+                }
+            }, {
+                '$addFields': {
+                    'projectCount': {
+                        '$size': '$projects'
+                    }
+                }
+            }, {
+                '$project': {
+                    'projects': 0,
+                    'password': 0,
+                    '__v': 0,
+                    'createdAt': 0
+                }
+            }
+        ])
+
+        if (user.length === 0) {
+            return next(new HttpError(404, 'User not found'));
+        }
+
+        res.status(200).json(user[0]);
+    } catch (err) {
+        console.log(err)
+        next(new HttpError(500 , 'Unknow error occured'));
+    }
 }

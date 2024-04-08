@@ -22,9 +22,7 @@ export default function Navbar() {
                     <div className="navbar-nav ms-auto">
                         {
                             auth.isLoggedIn ? 
-                            <button className="nav-link" onClick={auth.logout}>
-                                Logout
-                            </button>
+                            <NavLink className='nav-link' end to={`/profile/${auth.userId}`}>Profile</NavLink>
                                 :
                             <NavLink className='nav-link' end to='/login'>Login</NavLink>
                         }
