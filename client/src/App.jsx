@@ -17,6 +17,7 @@ import ViewProject from './project/pages/ViewProject';
 import EditProject from './project/pages/EditProject';
 import ProjectEditor from './project/pages/ProjectEditor';
 import Profile from './user/pages/Profile';
+import SearchProjects from './project/pages/SearchProjects';
 
 
 function App() {
@@ -42,13 +43,12 @@ function App() {
             <Route path='/' element={<Home />} />
             <Route path='/projects/:projectId' element={< ViewProject />}/>
             <Route path='/profile/:userId' element={< Profile />}/>
-
+            <Route path='/search' element={< SearchProjects />}/>
             <Route element={<AuthenticatedOnlyRoutes allowedRoles={['user']} redirectTo={'/login'} />}>
               <Route path='projects/create' element={<NewProject />} />
               <Route path='projects/:projectId/edit' element={<EditProject />}/>
               <Route path='projects/:projectId/editor' element={<ProjectEditor />}/>
             </Route>
-
             <Route element={<UnauthenticatedOnlyRoutes />}>
               <Route path='/login' element={<Login />} />
               <Route path='/signup' element={<Signup />} />

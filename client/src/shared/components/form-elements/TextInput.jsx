@@ -1,6 +1,6 @@
 import './TextInput.css'
 
-export default function TextInput({placeholder , type , register , name , rules , error}) {
+export default function TextInput({placeholder , type='text' , register , name , rules , error}) {
   return (
     <>
         <input 
