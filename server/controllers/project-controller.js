@@ -3,6 +3,8 @@ const Project = require('../models/Project');
 const Like = require('../models/Like');
 const { mongoose } = require('mongoose');
 
+const SORT_OPTIONS = ['likes-desc', 'likes-asc','time-desc' , 'time-asc'];
+
 module.exports.createNewProject = async (req, res, next) => {
     try {
         const newProject = new Project({ ...req.body, author: req.userData.userId, code: { html: '', css: '', js: '' } });
@@ -637,101 +639,175 @@ module.exports.getUserLikedProjects = async (req, res, next) => {
     }
 }
 
-// module.exports.getLikedProjects = async (req, res, next) => {
-//     try {
-//         let projects = await Project.aggregate([
-//             {
-//                 '$match': {
-//                     'user': new mongoose.Types.ObjectId('65be6e56d66520033ac700bf')
-//                 }
-//             }, 
-//             // {
-//             //     '$sort': {
-//             //         'createdAt': -1
-//             //     }
-//             // }, {
-//             //     '$lookup': {
-//             //         'from': 'projects',
-//             //         'localField': 'project',
-//             //         'foreignField': '_id',
-//             //         'as': 'project'
-//             //     }
-//             // }, {
-//             //     '$unwind': {
-//             //         'path': '$project',
-//             //         'preserveNullAndEmptyArrays': false
-//             //     }
-//             // }, {
-//             //     '$replaceRoot': {
-//             //         'newRoot': '$project'
-//             //     }
-//             // }, {
-//             //     '$lookup': {
-//             //         'from': 'users',
-//             //         'localField': 'author',
-//             //         'foreignField': '_id',
-//             //         'as': 'author'
-//             //     }
-//             // }, {
-//             //     '$unwind': {
-//             //         'path': '$author',
-//             //         'preserveNullAndEmptyArrays': false
-//             //     }
-//             // }, {
-//             //     '$lookup': {
-//             //         'from': 'likes',
-//             //         'localField': '_id',
-//             //         'foreignField': 'project',
-//             //         'as': 'likes'
-//             //     }
-//             // }, {
-//             //     '$addFields': {
-//             //         'isLiked': {
-//             //             '$cond': {
-//             //                 'if': {
-//             //                     '$gt': [
-//             //                         {
-//             //                             '$size': {
-//             //                                 '$ifNull': [
-//             //                                     {
-//             //                                         '$filter': {
-//             //                                             'input': '$likes',
-//             //                                             'cond': {
-//             //                                                 '$eq': [
-//             //                                                     '$$this.user', new mongoose.Types.ObjectId('65cfa421c3110d7826925e39')
-//             //                                                 ]
-//             //                                             }
-//             //                                         }
-//             //                                     }, []
-//             //                                 ]
-//             //                             }
-//             //                         }, 0
-//             //                     ]
-//             //                 },
-//             //                 'then': true,
-//             //                 'else': false
-//             //             }
-//             //         }
-//             //     }
-//             // }, {
-//             //     '$addFields': {
-//             //         'likesCount': {
-//             //             '$size': '$likes'
-//             //         }
-//             //     }
-//             // }, {
-//             //     '$project': {
-//             //         'likes': 0,
-//             //         'author.password': 0,
-//             //         'author.createdAt': 0,
-//             //         'author.__v': 0
-//             //     }
-//             // }
-//         ])
+module.exports.searchProjects = async (req, res, next) => {
+    try {
+        let searchTerm = req.query.searchTerm ? req.query.searchTerm : '';
+        let sortBy = req.query.sortBy ? req.query.sortBy : 'likes-desc';
+        let includeForks = req.query.includeForks ? req.query.includeForks : 'false';
+        let page = parseInt(req.query.page);
+        let limit = parseInt(req.query.limit);
 
-//         res.status(200).json(projects);
-//     } catch (err) {
-//         console.log(err);
-//         next(new HttpError(500, 'Unknown error'));
-//     }
-// }
+        // console.log(req.query)
+
+        if (searchTerm == '' || !searchTerm) {
+            return res.status(200).json([]);
+        }
+
+        // page can't be less than 1
+        page = page < 1 ? 1 : page;
+        // limit should be between 1 to 10 , default is 6
+        limit = (limit < 1 || limit > 10) ? 6 : limit;
+
+        // if not valid string then assign the first one in the array
+        if (!SORT_OPTIONS.includes(sortBy)) {
+            sortBy = SORT_OPTIONS[0];
+        }
+
+        console.log(sortBy)
+
+        let aggregationPipeline = [];
+
+        if (includeForks == 'true') {
+            aggregationPipeline.push({
+                '$match': {
+                    'title': {
+                        '$regex': new RegExp(searchTerm, "i")
+                    }
+                }
+            })
+
+        } else {
+            aggregationPipeline.push({
+                '$match': {
+                    'title': {
+                        '$regex': new RegExp(searchTerm, "i")
+                    },
+                    'forkedFrom': null
+                }
+            })
+        }
+
+        if (sortBy == 'time-desc') {
+            aggregationPipeline.push({
+                '$sort': {
+                    'createdAt': -1
+                }
+            })
+        } else if (sortBy == 'time-asc') {
+            aggregationPipeline.push({
+                '$sort': {
+                    'createdAt': 1
+                }
+            })
+        }
+
+        aggregationPipeline.push({
+            '$lookup': {
+                'from': 'users',
+                'localField': 'author',
+                'foreignField': '_id',
+                'as': 'author'
+            }
+        })
+        aggregationPipeline.push({
+            '$unwind': {
+                'path': '$author',
+                'preserveNullAndEmptyArrays': false
+            }
+        })
+        aggregationPipeline.push({
+            '$lookup': {
+                'from': 'likes',
+                'localField': '_id',
+                'foreignField': 'project',
+                'as': 'likes'
+            }
+        })
+
+        if (req.userData) {
+            aggregationPipeline.push({
+                '$addFields': {
+                    'isLiked': {
+                        '$cond': {
+                            'if': {
+                                '$gt': [
+                                    {
+                                        '$size': {
+                                            '$ifNull': [
+                                                {
+                                                    '$filter': {
+                                                        'input': '$likes',
+                                                        'cond': {
+                                                            '$eq': [
+                                                                '$$this.user', new mongoose.Types.ObjectId(req.userData.userId)
+                                                            ]
+                                                        }
+                                                    }
+                                                }, []
+                                            ]
+                                        }
+                                    }, 0
+                                ]
+                            },
+                            'then': true,
+                            'else': false
+                        }
+                    }
+                }
+            })
+
+        } else {
+            aggregationPipeline.push({
+                '$addFields': {
+                    'isLiked': false
+                }
+            })
+        }
+
+        aggregationPipeline.push({
+            '$addFields': {
+                'likesCount': {
+                    '$size': '$likes'
+                }
+            }
+        })
+
+        if (sortBy == 'likes-desc') {
+            aggregationPipeline.push({
+                '$sort': {
+                    'likesCount': -1
+                }
+            })
+        } else if (sortBy == 'likes-asc') {
+            aggregationPipeline.push({
+                '$sort': {
+                    'likesCount': 1
+                }
+            })
+        }
+
+        aggregationPipeline.push({
+            '$project': {
+                'likes': 0,
+                'author.password': 0,
+                'author.createdAt': 0,
+                'author.__v': 0
+            }
+        })
+
+        let projects = await Project.aggregate(aggregationPipeline)
+
+        console.log('=======================================================')
+        console.log(aggregationPipeline)
+        console.log('=======================================================')
+
+        if (projects.length === 0) {
+            return next(new HttpError(404, 'Projects not found'));
+        }
+        res.status(200).json(projects);
+
+    } catch (err) {
+        console.log(err);
+        next(new HttpError(500, 'Failed to fetch projects'));
+    }
+}

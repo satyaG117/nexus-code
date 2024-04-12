@@ -11,12 +11,15 @@ const {
     createNewProject,
     saveProject,
     forkProject,
-    toggleLike, getUserProjects, getUserLikedProjects, getLikedProjects } = require('../controllers/project-controller');
+    toggleLike, getUserProjects, getUserLikedProjects, getLikedProjects, 
+    searchProjects} = require('../controllers/project-controller');
 
 
 // router.get('/test', getLikedProjects);
 router.post('/', isLoggedIn, schemaValidator(projectSchema), createNewProject);
 router.get('/', decodeToken, getProjects);
+
+router.get('/search', decodeToken, searchProjects);
 
 router.get('/:projectId', decodeToken, getProject);
 router.patch('/:projectId', isLoggedIn, schemaValidator(projectSchema), updateProjectDetails);
