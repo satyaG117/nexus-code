@@ -15,11 +15,12 @@ export default function Profile() {
   const makeRequest = useFetch();
   const [user, setUser] = useState(null)
   const [selectedTab, setSelectedTab] = useState(0);
-  const [projects, setProjects] = useState(null);
+  const [projects, setProjects] = useState([]);
   const [userError, setUserError] = useState(null);
   const [projectError, setProjectError] = useState(null);
   const [isUserLoading, setIsUserLoading] = useState(false);
   const [isProjectLoading, setIsProjectLoading] = useState(false);
+  const[page, setPage] = useState(1);
 
   const toggleLikeState = (projectId) => {
     setProjects((prevState) => {
@@ -72,35 +73,43 @@ export default function Profile() {
 
 
 
-  useEffect(() => {
-    console.log(selectedTab)
-    const fetchProjects = async () => {
-      try {
-        setProjectError(null)
-        setIsProjectLoading(true)
-        let responseData;
-        if (selectedTab == 0) {
-          responseData = await makeRequest(`http://localhost:5000/api/projects/user/${userId}`, 'GET', null, {
-            'Authorization': auth.token
-          })
-        } else if (selectedTab == 1) {
-          responseData = await makeRequest(`http://localhost:5000/api/projects/user/${userId}/liked`, 'GET', null, {
-            'Authorization': auth.token
-          })
-        }
-        console.log(responseData)
-        setProjects(responseData)
-
-      } catch (err) {
-        console.log(err)
-        setProjectError(err.message);
-      } finally {
-        setIsProjectLoading(false);
-
+  const fetchProjects = async () => {
+    try {
+      setProjectError(null)
+      setIsProjectLoading(true)
+      let responseData;
+      if (selectedTab == 0) {
+        responseData = await makeRequest(`http://localhost:5000/api/projects/user/${userId}?page=${page}`, 'GET', null, {
+          'Authorization': auth.token
+        })
+      } else if (selectedTab == 1) {
+        responseData = await makeRequest(`http://localhost:5000/api/projects/user/${userId}/liked?page=${page}`, 'GET', null, {
+          'Authorization': auth.token
+        })
       }
+      console.log(responseData)
+      setProjects(prev => [...prev, ...responseData])
+      setPage(prev => prev + 1)
+
+    } catch (err) {
+      console.log(err)
+      setProjectError(err.message);
+    } finally {
+      setIsProjectLoading(false);
+
     }
-    fetchProjects();
+  }
+
+  useEffect(() => {
+    setProjects([]);
+    setPage(1);
   }, [selectedTab])
+
+  useEffect(()=>{
+    if(page == 1){
+      fetchProjects();
+    }
+  },[page])
 
   return (
     <>
@@ -134,6 +143,10 @@ export default function Profile() {
               {projects && <ProjectListSmall projects={projects} toggleLike={toggleLike} />}
               {isProjectLoading && (<div className="py-5 text-center"><Spinner /></div>)}
               {projectError && <div className="mt-4 text-secondary">{projectError}</div>}
+              <div className="my-3 text-center">
+                <p className="me-3">{page}</p>
+                <button className="btn btn-light" onClick={fetchProjects}>Load More</button>
+              </div>
             </div>
           </div>
         </div>

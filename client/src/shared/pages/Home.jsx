@@ -4,14 +4,15 @@ import useFetch from "../hooks/useFetch";
 import ProjectList from "../../project/components/ProjectList";
 import useFork from "../hooks/useFork";
 import { AuthContext } from "../contexts/AuthContext";
-import {toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function Home() {
   const makeRequest = useFetch();
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null);
-  const [projects, setProjects] = useState(null)
+  const [projects, setProjects] = useState([])
+  const [page, setPage] = useState(1);
   const { forkProject, isForking } = useFork()
   const auth = useContext(AuthContext);
 
@@ -23,26 +24,26 @@ export default function Home() {
     }
   }
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        setError(null)
-        setIsLoading(true);
-        const responseData = await makeRequest('http://localhost:5000/api/projects', 'GET', null, {
-          'Authorization': auth.token
-        });
-        setProjects(responseData);
-        console.log(responseData)
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
+  const fetchProjects = async () => {
+    try {
+      setError(null)
+      setIsLoading(true);
+      const responseData = await makeRequest(`http://localhost:5000/api/projects?page=${page}&limit=${6}`, 'GET', null, {
+        'Authorization': auth.token
+      });
+      setProjects(prev => [...prev ,...responseData])
+      console.log(responseData)
+      setPage(prev => prev + 1);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
+  }
 
+  useEffect(() => {
     fetchProjects()
-
-  }, [makeRequest])
+  }, [])
 
   const toggleLikeState = (projectId) => {
     setProjects((prevState) => {
@@ -54,7 +55,7 @@ export default function Home() {
             return { ...p, isLiked: true, likesCount: p.likesCount + 1 }
           }
         }
-    
+
         return p
       });
     });
@@ -66,7 +67,7 @@ export default function Home() {
       // optimistic update
       toggleLikeState(projectId);
       await makeRequest(`http://localhost:5000/api/projects/${projectId}/like`, 'POST', null, {
-        'Authorization' : auth.token
+        'Authorization': auth.token
       });
     } catch (err) {
       toast.error(err.message)
@@ -82,6 +83,9 @@ export default function Home() {
     <div className="d-flex flex-column justify-content-center align-items-center">
       {error && <h5>{error}</h5>}
       {isLoading && <Spinner />}
+    </div>
+    <div className="my-3 text-center">
+      <button className="btn btn-light" onClick={fetchProjects}>Load more</button>
     </div>
   </>
   )
