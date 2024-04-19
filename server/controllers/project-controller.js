@@ -3,7 +3,7 @@ const Project = require('../models/Project');
 const Like = require('../models/Like');
 const { mongoose } = require('mongoose');
 
-const SORT_OPTIONS = ['likes-desc', 'likes-asc','time-desc' , 'time-asc'];
+const SORT_OPTIONS = ['likes-desc', 'likes-asc', 'time-desc', 'time-asc'];
 
 module.exports.createNewProject = async (req, res, next) => {
     try {
@@ -117,6 +117,13 @@ module.exports.getProject = async (req, res, next) => {
 }
 
 module.exports.getProjects = async (req, res, next) => {
+    let page = req.query.page ? parseInt(req.query.page) : 1;
+    let limit = req.query.limit ? parseInt(req.query.limit) : 6;
+
+    // page can't be less than 1
+    page = page < 1 ? 1 : page;
+    // limit should be between 1 to 10 , default is 6
+    limit = (limit < 1 || limit > 10) ? 6 : limit;
     try {
         let projects;
         let aggregationPipeline = [
@@ -124,8 +131,11 @@ module.exports.getProjects = async (req, res, next) => {
                 '$sort': {
                     'createdAt': -1
                 }
-            },
-            {
+            }, {
+                '$skip': (page - 1) * limit
+            }, {
+                '$limit': limit
+            }, {
                 '$lookup': {
                     'from': 'users',
                     'localField': 'author',
@@ -406,6 +416,13 @@ module.exports.toggleLike = async (req, res, next) => {
 }
 
 module.exports.getUserProjects = async (req, res, next) => {
+    let page = req.query.page ? parseInt(req.query.page) : 1;
+    let limit = req.query.limit ? parseInt(req.query.limit) : 6;
+
+    // page can't be less than 1
+    page = page < 1 ? 1 : page;
+    // limit should be between 1 to 10 , default is 6
+    limit = (limit < 1 || limit > 10) ? 6 : limit;
     try {
         const { userId } = req.params;
         let aggregationPipeline = [
@@ -417,6 +434,10 @@ module.exports.getUserProjects = async (req, res, next) => {
                 '$sort': {
                     'createdAt': -1
                 }
+            }, {
+                '$skip': (page - 1) * limit
+            }, {
+                '$limit': limit
             }, {
                 '$lookup': {
                     'from': 'users',
@@ -504,11 +525,19 @@ module.exports.getUserProjects = async (req, res, next) => {
         res.status(200).json(projects);
 
     } catch (err) {
+        console.log(err);
         next(new HttpError(500, 'Unknown error encountered'))
     }
 }
 
 module.exports.getUserLikedProjects = async (req, res, next) => {
+    let page = req.query.page ? parseInt(req.query.page) : 1;
+    let limit = req.query.limit ? parseInt(req.query.limit) : 6;
+
+    // page can't be less than 1
+    page = page < 1 ? 1 : page;
+    // limit should be between 1 to 10 , default is 6
+    limit = (limit < 1 || limit > 10) ? 6 : limit;
     try {
         const { userId } = req.params;
         let aggregationPipeline = [
@@ -520,6 +549,10 @@ module.exports.getUserLikedProjects = async (req, res, next) => {
                 '$sort': {
                     'createdAt': -1
                 }
+            }, {
+                '$skip': (page - 1) * limit
+            }, {
+                '$limit': limit
             }, {
                 '$lookup': {
                     'from': 'projects',
@@ -619,9 +652,9 @@ module.exports.getUserLikedProjects = async (req, res, next) => {
         });
 
 
-        console.log('======================================');
-        console.log(aggregationPipeline);
-        console.log('======================================');
+        // console.log('======================================');
+        // console.log(aggregationPipeline);
+        // console.log('======================================');
 
 
 
@@ -635,6 +668,7 @@ module.exports.getUserLikedProjects = async (req, res, next) => {
         res.status(200).json(projects);
 
     } catch (err) {
+        console.log(err);
         next(new HttpError(500, 'Unknown error encountered'))
     }
 }
@@ -644,8 +678,8 @@ module.exports.searchProjects = async (req, res, next) => {
         let searchTerm = req.query.searchTerm ? req.query.searchTerm : '';
         let sortBy = req.query.sortBy ? req.query.sortBy : 'likes-desc';
         let includeForks = req.query.includeForks ? req.query.includeForks : 'false';
-        let page = parseInt(req.query.page);
-        let limit = parseInt(req.query.limit);
+        let page = req.query.page ? parseInt(req.query.page) : 1;
+        let limit = req.query.limit ? parseInt(req.query.limit) : 6;
 
         // console.log(req.query)
 
@@ -698,6 +732,16 @@ module.exports.searchProjects = async (req, res, next) => {
                 '$sort': {
                     'createdAt': 1
                 }
+            })
+        }
+
+        if (sortBy === 'time-desc' || sortBy === 'time-asc') {
+            aggregationPipeline.push({
+                $skip: (page - 1) * limit
+            }
+            )
+            aggregationPipeline.push({
+                $limit: limit
             })
         }
 
@@ -783,6 +827,16 @@ module.exports.searchProjects = async (req, res, next) => {
                 '$sort': {
                     'likesCount': 1
                 }
+            })
+        }
+
+        if (sortBy === 'likes-desc' || sortBy === 'likes-asc') {
+            aggregationPipeline.push({
+                $skip: (page - 1) * limit
+            }
+            )
+            aggregationPipeline.push({
+                $limit: limit
             })
         }
 
