@@ -18,6 +18,8 @@ import EditProject from './project/pages/EditProject';
 import ProjectEditor from './project/pages/ProjectEditor';
 import Profile from './user/pages/Profile';
 import SearchProjects from './project/pages/SearchProjects';
+import ProjectCollab from './project/pages/ProjectCollab';
+import UserInvites from './user/pages/UserInvites';
 
 
 function App() {
@@ -44,11 +46,15 @@ function App() {
             <Route path='/projects/:projectId' element={< ViewProject />}/>
             <Route path='/profile/:userId' element={< Profile />}/>
             <Route path='/search' element={< SearchProjects />}/>
+
             <Route element={<AuthenticatedOnlyRoutes allowedRoles={['user']} redirectTo={'/login'} />}>
-              <Route path='projects/create' element={<NewProject />} />
-              <Route path='projects/:projectId/edit' element={<EditProject />}/>
-              <Route path='projects/:projectId/editor' element={<ProjectEditor />}/>
+              <Route path='/projects/create' element={<NewProject />} />
+              <Route path='/projects/:projectId/edit' element={<EditProject />}/>
+              <Route path='/projects/:projectId/editor' element={<ProjectEditor />}/>
+              <Route path='/projects/:projectId/collaboration' element={<ProjectCollab />} />
+              <Route path='/user/invites' element={<UserInvites />} />
             </Route>
+
             <Route element={<UnauthenticatedOnlyRoutes />}>
               <Route path='/login' element={<Login />} />
               <Route path='/signup' element={<Signup />} />

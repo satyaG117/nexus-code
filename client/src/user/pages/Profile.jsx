@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react"
-import { useParams } from "react-router-dom"
+import { Link, useParams } from "react-router-dom"
 import useFetch from "../../shared/hooks/useFetch";
 
 import './Profile.css'
@@ -20,7 +20,7 @@ export default function Profile() {
   const [projectError, setProjectError] = useState(null);
   const [isUserLoading, setIsUserLoading] = useState(false);
   const [isProjectLoading, setIsProjectLoading] = useState(false);
-  const[page, setPage] = useState(1);
+  const [page, setPage] = useState(1);
 
   const toggleLikeState = (projectId) => {
     setProjects((prevState) => {
@@ -105,11 +105,11 @@ export default function Profile() {
     setPage(1);
   }, [selectedTab])
 
-  useEffect(()=>{
-    if(page == 1){
+  useEffect(() => {
+    if (page == 1) {
       fetchProjects();
     }
-  },[page])
+  }, [page])
 
   return (
     <>
@@ -131,6 +131,16 @@ export default function Profile() {
             {auth.userId === userId && (<div>
               <button className="btn btn-sm btn-light me-2">Edit Profile</button>
               <button className="btn btn-sm btn-danger" onClick={auth.logout}>Logout</button>
+              <div className="my-3">
+                <Link type="button" className="btn btn-sm btn-primary position-relative" to={'/user/invites'}>
+                  Invites
+                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {user.inviteCount}
+                    <span className="visually-hidden">Pending invites</span>
+                  </span>
+                </Link>
+              </div>
+
             </div>)}
           </div>
           <div className="col-lg-8 p-2">
@@ -144,8 +154,8 @@ export default function Profile() {
               {isProjectLoading && (<div className="py-5 text-center"><Spinner /></div>)}
               {projectError && <div className="mt-4 text-secondary">{projectError}</div>}
               <div className="my-3 text-center">
-                <p className="me-3">{page}</p>
-                <button className="btn btn-light" onClick={fetchProjects}>Load More</button>
+                {/* <p className="me-3">{page}</p> */}
+                {page > 1 && <button className="btn btn-light" onClick={fetchProjects}>Load More</button>}
               </div>
             </div>
           </div>

@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 const Like = require('../models/Like')
-const HttpError = require('../models/HttpError')
+const HttpError = require('../models/HttpError');
+const Invite = require('./Invite');
 
 const projectSchema = new Schema({
     title: {
@@ -32,6 +33,13 @@ const projectSchema = new Schema({
         ref: 'Project',
         default: null
     },
+    contributors: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true,
+            ref: 'User'
+        }
+    ],
     createdAt: {
         type: Date,
         default: Date.now,
@@ -55,7 +63,11 @@ projectSchema.pre('findOneAndDelete', async function (next) {
         console.log('In pre middleware')
         console.log(this.getQuery()._id);
         const projectId = this.getQuery()._id;
-        await Like.deleteMany({project : projectId})
+        await Promise.all([
+            Like.deleteMany({ project: projectId }),
+            Invite.deleteMany({ project: projectId }),
+        ]);
+        // await Like.deleteMany({ project: projectId })
         next();
     } catch (err) {
         console.log(err);

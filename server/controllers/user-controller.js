@@ -103,11 +103,26 @@ module.exports.getUser = async (req, res, next) => {
                     }
                 }
             }, {
+                '$lookup': {
+                    'from': 'invites',
+                    'localField': '_id',
+                    'foreignField': 'user',
+                    'as': 'invites'
+                }
+            }, {
+                '$addFields': {
+                    'inviteCount': {
+                        '$size': '$invites'
+                    }
+                }
+            },
+            {
                 '$project': {
                     'projects': 0,
                     'password': 0,
                     '__v': 0,
-                    'createdAt': 0
+                    'createdAt': 0,
+                    'invites': 0
                 }
             }
         ])
@@ -119,6 +134,19 @@ module.exports.getUser = async (req, res, next) => {
         res.status(200).json(user[0]);
     } catch (err) {
         console.log(err)
-        next(new HttpError(500 , 'Unknow error occured'));
+        next(new HttpError(500, 'Unknown error occured'));
+    }
+}
+
+module.exports.searchUsersByUsername = async (req, res, next) => {
+    try {
+        const {searchTerm} = req.query;
+        if(!searchTerm) return res.status(200).json([]);
+
+        const users = await User.find({ username: new RegExp(searchTerm, 'i') }).select('-password -__v').limit(6);
+        res.status(200).json(users);
+    } catch (err) {
+        console.log(err)
+        next(new HttpError(500, 'Unable to fetch users'));
     }
 }

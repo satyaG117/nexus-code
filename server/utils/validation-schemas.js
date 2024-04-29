@@ -23,4 +23,9 @@ const codeSchema = Joi.object({
     js : Joi.string(),
 })
 
-module.exports = {loginSchema, signupSchema, projectSchema, codeSchema}
+const inviteSchema = Joi.object({
+    projectId : Joi.string().length(24).hex().required(),
+    userId : Joi.string().length(24).hex().required()
+})
+
+module.exports = {loginSchema, signupSchema, projectSchema, codeSchema, inviteSchema}
