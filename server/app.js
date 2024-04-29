@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 
 const userRoutes = require('./routes/user-routes');
 const projectRoutes = require('./routes/project-routes')
+const inviteRoutes = require('./routes/invite-routes')
 
 const app = express();
 
@@ -48,6 +49,7 @@ app.get('/test', (req, res, next) => {
 
 app.use('/api/users', userRoutes)
 app.use('/api/projects', projectRoutes)
+app.use('/api/invites', inviteRoutes )
 
 // error handler middleware
 app.use((err, req, res, next) => {

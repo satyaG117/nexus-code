@@ -3,6 +3,7 @@ const Project = require('../models/Project');
 const Like = require('../models/Like');
 const { mongoose } = require('mongoose');
 
+
 const SORT_OPTIONS = ['likes-desc', 'likes-asc', 'time-desc', 'time-asc'];
 
 module.exports.createNewProject = async (req, res, next) => {
@@ -42,6 +43,13 @@ module.exports.getProject = async (req, res, next) => {
                     'localField': '_id',
                     'foreignField': 'project',
                     'as': 'likes'
+                }
+            }, {
+                '$lookup': {
+                    'from': 'users',
+                    'localField': 'contributors',
+                    'foreignField': '_id',
+                    'as': 'contributors'
                 }
             }
         ]
@@ -96,10 +104,12 @@ module.exports.getProject = async (req, res, next) => {
 
         aggregationPipeline.push({
             '$project': {
-                'likes': 0,
+                'stars': 0,
                 'author.password': 0,
                 'author.createdAt': 0,
-                'author.__v': 0
+                'author.__v': 0,
+                'contributors.password': 0,
+                'contributors.email': 0
             }
         })
 
@@ -865,3 +875,4 @@ module.exports.searchProjects = async (req, res, next) => {
         next(new HttpError(500, 'Failed to fetch projects'));
     }
 }
+

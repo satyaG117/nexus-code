@@ -84,8 +84,8 @@ export default function Home() {
       {error && <h5>{error}</h5>}
       {isLoading && <Spinner />}
     </div>
-    <div className="my-3 text-center">
-      <button className="btn btn-light" onClick={fetchProjects}>Load more</button>
+    <div className="my-3 py-3 text-center">
+      {page > 1 && <button className="btn btn-light" onClick={fetchProjects}>Load more</button>}
     </div>
   </>
   )

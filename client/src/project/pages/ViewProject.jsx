@@ -12,6 +12,8 @@ import Modal from "../../shared/components/ui-elements/Modal";
 import useFork from "../../shared/hooks/useFork";
 import LikeButton from "../../shared/components/ui-elements/LikeButton";
 
+const themes = ['info', 'danger', 'warning', 'success']
+
 export default function ViewProject() {
     const { projectId } = useParams();
     const navigate = useNavigate();
@@ -120,51 +122,96 @@ export default function ViewProject() {
                 <ErrorMessage message={error} />
             }
             {projectData && (
-                <div className="shadow mt-4 col-md-6 offset-md-3 col-10 offset-1 bg-primary-subtle">
-                    <div className="bg-primary-subtle px-4 py-3 d-flex">
-                        <div className="me-auto">
-                            <h4>{projectData.title}</h4>
-                            <Link to={`/profile/${projectData.author._id}`} className="btn btn-sm btn-outline-light">{projectData.author.username}</Link>
-                            {projectData.forkedFrom && (<div><small>Forked from </small> <Link to={`/projects/${projectData.forkedFrom}`}>See original</Link></div>)}
-                        </div>
-                        {projectData.author._id === auth.userId && (
-                            <div className="ms-auto">
-                                <div className="dropdown">
-                                    <button className="btn btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-three-dots-vertical" viewBox="0 0 16 16">
-                                            <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0" />
-                                        </svg>
-                                    </button>
-                                    <ul className="dropdown-menu">
-                                        <li><Link to={`/projects/${projectId}/edit`} className="dropdown-item">Edit</Link></li>
-                                        <li><button className="dropdown-item" onClick={openDeleteModal}>Delete</button></li>
-
-                                    </ul>
+                <div className="container my-3">
+                    <div className="row">
+                        <div className="col-lg-6">
+                            <div className="bg-primary-subtle px-4 py-3 d-flex">
+                                <div className="me-auto">
+                                    <h4>{projectData.title}</h4>
+                                    <Link to={`/profile/${projectData.author._id}`} className="btn btn-sm btn-outline-light">{projectData.author.username}</Link>
+                                    {projectData.forkedFrom && (<div><small>Forked from </small> <Link to={`/projects/${projectData.forkedFrom}`}>See original</Link></div>)}
                                 </div>
+                                {projectData.author._id === auth.userId && (
+                                    <div className="ms-auto">
+                                        <div className="dropdown">
+                                            <button className="btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" className="bi bi-three-dots-vertical" viewBox="0 0 16 16">
+                                                    <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0" />
+                                                </svg>
+                                            </button>
+                                            <ul className="dropdown-menu">
+                                                <li><Link to={`/projects/${projectId}/edit`} className="dropdown-item">Edit</Link></li>
+                                                <li><button className="dropdown-item" onClick={openDeleteModal}>Delete</button></li>
 
-                            </div>)}
-                    </div>
-                    <div>
-                        <iframe
-                            srcDoc={projectData.code ? `<body>${projectData.code.html}</body><style>${projectData.code.css}</style><script>${projectData.code.js}</script>` : ''}
-                            id="output-iframe"
-                            title="output"
-                            sandbox="allow-scripts"
-                            width="100%"
-                        // height="100%"
-                        />
-                    </div>
-                    <div className="d-flex p-2 py-3 border">
-                        <Link to={`/projects/${projectId}/editor`} className="btn btn-light me-2">Open in Editor</Link>
-                        <span className="me-2"><LikeButton isLiked={projectData.isLiked} onClick={toggleLike} projectId={projectData._id} likesCount={projectData.likesCount} /></span>
-                        <button className="btn btn-secondary me-2" onClick={handleFork}>Fork</button>
-                    </div>
-                    <div className="p-2">
-                        <p className="mb-3">{projectData.description}</p>
-                        <p>Created at : {projectData.createdAt.toLocaleString()}</p>
-                        <p>Last edited at : {projectData.lastEditedAt.toLocaleString()}</p>
+                                            </ul>
+                                        </div>
+
+                                    </div>)}
+                            </div>
+                            <div>
+                                <iframe
+                                    srcDoc={projectData.code ? `<body>${projectData.code.html}</body><style>${projectData.code.css}</style><script>${projectData.code.js}</script>` : ''}
+                                    id="output-iframe"
+                                    title="output"
+                                    sandbox="allow-scripts"
+                                    width="100%"
+                                // height="100%"
+                                />
+                            </div>
+                        </div>
+                        <div className="col-lg-6">
+                            <div className="bg-primary-subtle p-3">
+                                <div className="d-flex">
+                                    <Link to={`/projects/${projectId}/editor`} className="btn btn-light me-2">Open in Editor</Link>
+                                    <span className="me-2"><LikeButton isLiked={projectData.isLiked} onClick={toggleLike} projectId={projectData._id} likesCount={projectData.likesCount} /></span>
+                                    <button className="btn btn-secondary me-2" onClick={handleFork}>Fork</button>
+
+                                </div>
+                                <hr />
+                                {projectData.description &&
+                                    <>
+                                        <p className="mb-3">{projectData.description}</p>
+                                        <hr />
+                                    </>
+
+                                }
+
+
+                                <div className="">
+                                    <div className="d-flex">
+
+                                        <h5 className="me-auto">Collaborators : </h5>
+                                        {auth.userId === projectData.author._id && <Link to={`/projects/${projectId}/collaboration`} className="btn btn-sm btn-light ms-auto"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black" class="bi bi-gear-fill" viewBox="0 0 16 16">
+                                            <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z" />
+                                        </svg></Link>}
+                                    </div>
+                                    <div>
+                                        <Link to={`/profile/${projectData.author._id}`} className="btn btn-sm border">{projectData.author.username} (Author)</Link>
+                                    </div>
+                                    {
+                                        projectData.contributors.length > 0 && projectData.contributors.map((contributor, index) => {
+                                            return (
+                                                <div key={index} className="my-2">
+                                                    <Link to={`/profile/${contributor._id}`} className="btn btn-sm border">{contributor.username}</Link>
+                                                </div>
+                                            )
+                                        })
+                                    }
+                                </div>
+                                <hr />
+
+
+                                <div className="">
+                                    <p>Created at : {projectData.createdAt.toLocaleString()}</p>
+                                    <p>Last edited at : {projectData.lastEditedAt.toLocaleString()}</p>
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
+
+
             )
             }
         </>
