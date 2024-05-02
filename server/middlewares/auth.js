@@ -37,7 +37,7 @@ module.exports.decodeToken = (req, res, next) => {
             const token = req.headers.authorization;
             if (token) {
                 const payload = jwt.verify(token, process.env.JWT_KEY);
-                console.log("Payload : ", payload);
+                // console.log("Payload : ", payload);
                 // attach payload to the req object
                 req.userData = payload;
             }

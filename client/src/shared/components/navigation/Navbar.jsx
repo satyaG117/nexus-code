@@ -13,7 +13,7 @@ export default function Navbar() {
                 </button>
                 <div className="collapse navbar-collapse" id="navbarNavAltMarkup">
                     <div className="navbar-nav">
-                        <NavLink className='nav-link' end to='/'>Home</NavLink>
+                        <NavLink className='nav-link' end to='/home'>Home</NavLink>
                         <NavLink className='nav-link' end to='/search'>Search</NavLink>
                         <NavLink className='nav-link' end to='/projects/create'>Create</NavLink>
 

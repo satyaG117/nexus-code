@@ -13,7 +13,7 @@ module.exports.inviteUser = async (req, res, next) => {
         console.log(req.body)
 
         // check if invite already exists
-        const invite = await Invite.findOne({userId, projectId});
+        const invite = await Invite.findOne({user : userId, project : projectId});
         if(invite){
             return next(new HttpError(409, 'Invite to the user already exists'));
         }
@@ -30,7 +30,7 @@ module.exports.inviteUser = async (req, res, next) => {
         }
 
         // author can't send invite to themself
-        if(project.author.toString === userId){
+        if(project.author.toString() === userId){
             return next(new HttpError(400, 'Cannot invite yourself'));
         }
 

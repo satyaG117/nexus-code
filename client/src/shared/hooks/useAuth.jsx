@@ -7,9 +7,9 @@ export const useAuth = () => {
         return JSON.parse(localStorage.getItem(PREFIX_KEY + 'user'))
     })
 
-    const login = useCallback((userId, token, role = "user") => {
-        setUser({ isLoggedIn : true, userId, token, role });
-        localStorage.setItem(PREFIX_KEY + 'user', JSON.stringify({ userId, token, role }));
+    const login = useCallback((userId, token, username,role = "user") => {
+        setUser({ isLoggedIn : true, userId, token ,username, role });
+        localStorage.setItem(PREFIX_KEY + 'user', JSON.stringify({ userId, token, username,role }));
     }, [])
 
     const logout = useCallback(() => {
