@@ -102,7 +102,8 @@ export default function ProjectCollab() {
             try {
                 const responseData = await makeRequest(`http://localhost:5000/api/users/search?searchTerm=${searchTerm}`);
                 console.log(responseData)
-                setUsers(setUserFlag(responseData));
+                // setUsers(setUserFlag(responseData));
+                setUsers(responseData);
     
             } catch (err) {
                 console.log(err);

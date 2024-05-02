@@ -7,6 +7,8 @@ import { AuthContext } from "../../shared/contexts/AuthContext";
 import useFetch from "../../shared/hooks/useFetch";
 import SignupForm from "../components/SignupForm"
 
+import '../../shared/stylesheets/GradientBG.css'
+
 
 export default function Signup() {
   const [isLoading, setIsLoading] = useState(false);
@@ -34,15 +36,17 @@ export default function Signup() {
   }
 
   return (
-    <div className="col-md-4 offset-md-4 col-10 offset-1 p-3 shadow bg-dark-subtle mt-5 border-bottom border-start border-warning">
-      <h2>Signup</h2>
-      <div className="my-2">
-        <SignupForm
-          onSubmit={handleSignup}
-          isLoading={isLoading}
-        />
+    <div className="gradient-background" style={{flex : 1}}>
+      <div className="col-md-4 offset-md-4 col-10 offset-1 p-3 shadow bg-info-subtle mt-5">
+        <h2>Signup</h2>
+        <div className="my-2">
+          <SignupForm
+            onSubmit={handleSignup}
+            isLoading={isLoading}
+          />
+        </div>
+        Already have an account ? <Link to='/login'>Login</Link>
       </div>
-      Already have an account ? <Link to='/login'>Login</Link>
     </div>
   )
 }

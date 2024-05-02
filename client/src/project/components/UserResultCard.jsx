@@ -7,7 +7,8 @@ export default function UserResultCard({ user, onSend }) {
                 <small className="text-secondary">{user._id}</small>
             </div>
             <div className="ms-auto">
-                {user.inviteAllowed && <button className="btn btn-sm btn-warning" onClick={() => onSend(user._id)}>Send</button>}
+                {/* {user.inviteAllowed && <button className="btn btn-sm btn-warning" onClick={() => onSend(user._id)}>Send</button>} */}
+                <button className="btn btn-sm btn-warning" onClick={() => onSend(user._id)}>Send</button>
             </div>
         </div>
     )
