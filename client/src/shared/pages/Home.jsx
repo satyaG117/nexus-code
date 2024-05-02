@@ -77,7 +77,7 @@ export default function Home() {
 
   return (<>
     {isForking && <Spinner overlayType={'translucent'} text="Please wait" />}
-    {projects && (<div className="mt-5 mx-4">
+    {projects && (<div className="mt-1 mx-4">
       <ProjectList projects={projects} handleFork={handleFork} toggleLike={toggleLike} />
     </div>)}
     <div className="d-flex flex-column justify-content-center align-items-center">
